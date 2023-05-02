@@ -21,7 +21,7 @@ const registerNewUser = async ({
   }
   const password = randomstring.generate(10); // Generate a random password
   const passHash = await encrypt(password);
-  const registerNewUser = await UserModel.create({
+  const newUser = new UserModel({
     email,
     password: passHash,
     company: company,
@@ -32,29 +32,34 @@ const registerNewUser = async ({
     rol: rol,
   });
 
-  const params = {
-    Destination: {
-      ToAddresses: [email],
-    },
-    Message: {
-      Body: {
-        Html: {
+  try {
+    const params = {
+      Destination: {
+        ToAddresses: [email],
+      },
+      Message: {
+        Body: {
+          Html: {
+            Charset: "UTF-8",
+            Data: `<p>Your password is: ${password}</p>`,
+          },
+        },
+        Subject: {
           Charset: "UTF-8",
-          Data: `<p>Your password is: ${password}</p>`,
+          Data: "Welcome to our platform",
         },
       },
-      Subject: {
-        Charset: "UTF-8",
-        Data: "Welcome to our platform",
-      },
-    },
-    Source: "support@bonnett", // replace with your SES email address
-  };
+      Source: "support@bonnettanalytics.com",
+    };
 
-  // send email notification to the user
-  await ses.sendEmail(params).promise();
+    await ses.sendEmail(params).promise();
 
-  return registerNewUser;
+    const savedUser = await newUser.save();
+    return savedUser;
+  } catch (error) {
+    await newUser.remove();
+    throw error;
+  }
 };
 
 const loginUser = async ({ email, password }: Auth) => {
