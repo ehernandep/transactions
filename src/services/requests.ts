@@ -61,16 +61,45 @@ const getRequestsForAgent = async (id: string) => {
 };
 
 const updateRequestsForClient = async (id: string, data: Request) => {
-  const responseClient = await RequestModel.findOneAndUpdate(
-    { _id: id },
-    data,
-    {
-      new: true,
-    }
-  );
-  return responseClient;
-};
+  try {
+    const responseClient = await RequestModel.findOneAndUpdate(
+      { _id: id },
+      data,
+      {
+        new: true,
+      }
+    );
 
+    if (responseClient?.status === "closed") {
+      const agent = await UserModel.findById(responseClient.agent);
+      const params = {
+        Destination: {
+          ToAddresses: [agent?.email],
+        },
+        Message: {
+          Body: {
+            Html: {
+              Charset: "UTF-8",
+              Data: `<p>Your request was closed by ${agent?.email} if you want more info write to that email.</p>`,
+            },
+          },
+          Subject: {
+            Charset: "UTF-8",
+            Data: "Request Closed",
+          },
+        },
+        Source: "support@bonnettanalytics.com",
+      };
+
+      await ses.sendEmail(params).promise();
+    }
+
+    return responseClient;
+  } catch (err) {
+    console.error("Error updating request:", err);
+    throw new Error("Error updating request");
+  }
+};
 const deleteRequestFromClient = async (id: string) => {
   await RequestMessagesModel.remove({ request_id: id });
 
