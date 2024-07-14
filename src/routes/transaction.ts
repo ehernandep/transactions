@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getUsersToAdmin } from "../controllers/users";
+import { getTransactionToAdmin } from "../controllers/transaction";
 
 import { checkJwt } from "../middleware/session";
 
 const router = Router();
-router.get("/", checkJwt, getUsersToAdmin);
+router.get("/", getTransactionToAdmin);
 
 export { router };

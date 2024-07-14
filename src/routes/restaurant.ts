@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getUsersToAdmin } from "../controllers/users";
+import { getRestaurantToAdmin } from "../controllers/restaurant";
 
 import { checkJwt } from "../middleware/session";
 
 const router = Router();
-router.get("/", checkJwt, getUsersToAdmin);
+router.get("/", getRestaurantToAdmin);
 
 export { router };
